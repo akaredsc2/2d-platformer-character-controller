@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PhysicsObject : MonoBehaviour
@@ -9,6 +10,7 @@ public class PhysicsObject : MonoBehaviour
     protected bool isGrounded;
     protected Vector2 groundNormal;
 
+    protected Vector2 targetVelocity;
     protected Rigidbody2D rigidbody2D;
     protected Vector2 velocity;
     protected ContactFilter2D contactFilter2D;
@@ -33,10 +35,16 @@ public class PhysicsObject : MonoBehaviour
     private void FixedUpdate()
     {
         velocity += gravityModifier * Physics2D.gravity * Time.deltaTime;
+        velocity.x = targetVelocity.x;
         isGrounded = false;
         Vector2 deltaPosition = velocity * Time.deltaTime;
-        Vector2 movement = Vector2.up * deltaPosition.y;
-        ApplyMovement(movement, true);
+        
+        Vector2 surfaceMovementDirection = new Vector2(groundNormal.y, -groundNormal.x);
+        Vector2 surfaceMovement = surfaceMovementDirection * deltaPosition.x;
+        ApplyMovement(surfaceMovement, false);
+        
+        Vector2 verticalMovement = Vector2.up * deltaPosition.y;
+        ApplyMovement(verticalMovement, true);
     }
 
     private void ApplyMovement(Vector2 movement, bool isVerticalMovement)
@@ -51,9 +59,9 @@ public class PhysicsObject : MonoBehaviour
                 hitBufferList.Add(hitBuffer[i]);
             }
 
-            for (int i = 0; i < hitBufferList.Count; i++) 
+            foreach (RaycastHit2D hit2D in hitBufferList)
             {
-                Vector2 currentNormal = hitBufferList[i].normal;
+                Vector2 currentNormal = hit2D.normal;
                 Debug.Log("Current normal " + currentNormal);
                 if (currentNormal.y > minGroundNormalY)
                 {
@@ -72,8 +80,8 @@ public class PhysicsObject : MonoBehaviour
                     velocity = velocity - projection * currentNormal;
                 }
 
-                float modifiedDistance = hitBufferList[i].distance - shellRadius;
-                distance = modifiedDistance < distance ? modifiedDistance : distance;
+                float modifiedDistance = hit2D.distance - shellRadius;
+                distance = Math.Min(modifiedDistance, distance);
             }
         }
         rigidbody2D.position = rigidbody2D.position + movement.normalized * distance;
