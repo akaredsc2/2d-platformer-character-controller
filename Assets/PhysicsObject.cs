@@ -6,10 +6,22 @@ public class PhysicsObject : MonoBehaviour
 
     protected Rigidbody2D rigidbody2D;
     protected Vector2 velocity;
+    protected ContactFilter2D contactFilter2D;
+    protected RaycastHit2D[] hitBuffer = new RaycastHit2D[16];
+
+    protected const float minMovementDistance = 0.01f;
+    protected const float shellRadius = 0.01f;
 
     private void OnEnable()
     {
         rigidbody2D = GetComponent<Rigidbody2D>();
+    }
+
+    private void Start()
+    {
+        contactFilter2D.useTriggers = false;
+        contactFilter2D.SetLayerMask(Physics2D.GetLayerCollisionMask(gameObject.layer));
+        contactFilter2D.useLayerMask = true;
     }
 
     private void FixedUpdate()
@@ -22,6 +34,11 @@ public class PhysicsObject : MonoBehaviour
 
     private void ApplyMovement(Vector2 movement)
     {
+        float distance = movement.magnitude;
+        if (distance > minMovementDistance)
+        {
+            rigidbody2D.Cast(movement, contactFilter2D, hitBuffer, distance + shellRadius);
+        }
         rigidbody2D.position += movement;
     }
 }
