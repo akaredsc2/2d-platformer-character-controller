@@ -7,7 +7,7 @@
 /[Bb]uild/
 /[Bb]uilds/
 /Assets/AssetStoreTools*
-/Assets/Plugins/Editor/JetBrains
+/Assets/Plugins/Editor/JetBrains*
 sysinfo.txt
 *.pidb.meta
  
